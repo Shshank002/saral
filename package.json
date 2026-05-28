@@ -1,0 +1,45 @@
+{
+  "name": "saral",
+  "version": "0.3.0",
+  "private": true,
+  "description": "SARAL - A YouTube-like video platform with full auth, PostgreSQL + MinIO",
+  "scripts": {
+    "dev": "next dev",
+    "dev:network": "next dev -H 0.0.0.0",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "services:up": "docker compose up -d",
+    "services:down": "docker compose down",
+    "services:logs": "docker compose logs -f",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "db:seed": "tsx scripts/seed-db.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.624.0",
+    "@prisma/client": "^5.18.0",
+    "bcryptjs": "^2.4.3",
+    "formidable": "^3.5.1",
+    "ioredis": "^5.4.1",
+    "next": "14.2.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^20.14.10",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@types/uuid": "^10.0.0",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.39",
+    "prisma": "^5.18.0",
+    "tailwindcss": "^3.4.6",
+    "tsx": "^4.17.0",
+    "typescript": "^5.5.3"
+  }
+}

@@ -1,0 +1,126 @@
+// SARAL Database Schema
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===== Users (with full authentication) =====
+model User {
+  id            String   @id @default(uuid())
+  email         String?  @unique
+  passwordHash  String?  @map("password_hash")
+  channelName   String   @unique @map("channel_name")
+  displayName   String?  @map("display_name")
+  bio           String?
+  avatarUrl     String?  @map("avatar_url")
+  bannerUrl     String?  @map("banner_url")
+  emailVerified Boolean  @default(false) @map("email_verified")
+  isVerified    Boolean  @default(false) @map("is_verified")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  lastLoginAt   DateTime? @map("last_login_at")
+
+  videos        Video[]
+  likes         Like[]
+  comments      Comment[]
+  sessions      Session[]
+  subscriptions Subscription[] @relation("Subscriber")
+  subscribers   Subscription[] @relation("Channel")
+
+  @@map("users")
+}
+
+// ===== Sessions (login tokens) =====
+model Session {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  userAgent String?  @map("user_agent")
+  ipAddress String?  @map("ip_address")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+// ===== Videos =====
+model Video {
+  id              String   @id @default(uuid())
+  userId          String   @map("user_id")
+  title           String   @db.VarChar(200)
+  description     String   @default("") @db.Text
+  videoUrl        String   @map("video_url")
+  thumbnailUrl    String   @map("thumbnail_url")
+  durationSeconds Int?     @map("duration_seconds")
+  isShort         Boolean  @default(false) @map("is_short")
+  uploadedAt      DateTime @default(now()) @map("uploaded_at")
+
+  viewsCount Int @default(0) @map("views_count")
+  likesCount Int @default(0) @map("likes_count")
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  likes    Like[]
+  comments Comment[]
+
+  @@index([userId])
+  @@index([uploadedAt(sort: Desc)])
+  @@index([isShort])
+  @@index([viewsCount(sort: Desc)])
+  @@map("videos")
+}
+
+// ===== Likes =====
+model Like {
+  userId  String   @map("user_id")
+  videoId String   @map("video_id")
+  likedAt DateTime @default(now()) @map("liked_at")
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  video Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@id([userId, videoId])
+  @@index([videoId])
+  @@map("likes")
+}
+
+// ===== Comments =====
+model Comment {
+  id        String   @id @default(uuid())
+  videoId   String   @map("video_id")
+  userId    String   @map("user_id")
+  text      String   @db.Text
+  parentId  String?  @map("parent_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  video   Video     @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  user    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent  Comment?  @relation("Replies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies Comment[] @relation("Replies")
+
+  @@index([videoId, createdAt(sort: Desc)])
+  @@index([userId])
+  @@map("comments")
+}
+
+// ===== Subscriptions =====
+model Subscription {
+  subscriberId String   @map("subscriber_id")
+  channelId    String   @map("channel_id")
+  subscribedAt DateTime @default(now()) @map("subscribed_at")
+
+  subscriber User @relation("Subscriber", fields: [subscriberId], references: [id], onDelete: Cascade)
+  channel    User @relation("Channel", fields: [channelId], references: [id], onDelete: Cascade)
+
+  @@id([subscriberId, channelId])
+  @@index([channelId])
+  @@map("subscriptions")
+}
